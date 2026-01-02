@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catering Payment System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1 class="logo">🍽️ Catering System</h1>
+            <div class="nav-links" id="navLinks">
+                <a href="index.html">Home</a>
+                <a href="products.html" id="productsLink">Products</a>
+                <a href="cart.html" id="cartLink">Cart</a>
+                <a href="history.html" id="historyLink">History</a>
+                <a href="#" id="authLink">Login</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h2>Welcome to Our Catering Service</h2>
+            <p>Order delicious meals with ease</p>
+            <div class="hero-buttons">
+                <a href="products.html" class="btn btn-primary">Browse Menu</a>
+                <a href="register.html" class="btn btn-secondary">Sign Up</a>
+            </div>
+        </div>
+
+        <div class="features">
+            <div class="feature-card">
+                <h3>🍔 Fresh Meals</h3>
+                <p>High-quality ingredients prepared daily</p>
+            </div>
+            <div class="feature-card">
+                <h3>🚚 Fast Delivery</h3>
+                <p>Quick and reliable service</p>
+            </div>
+            <div class="feature-card">
+                <h3>💳 Easy Payment</h3>
+                <p>Secure checkout process</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        // Update navigation based on login status
+        function updateNav() {
+            const token = localStorage.getItem('token');
+            const authLink = document.getElementById('authLink');
+            
+            if (token) {
+                authLink.textContent = 'Logout';
+                authLink.href = '#';
+                authLink.onclick = (e) => {
+                    e.preventDefault();
+                    logout();
+                };
+            }
+        }
+        
+        updateNav();
+    </script>
+</body>
+</html>
