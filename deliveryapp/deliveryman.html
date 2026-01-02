@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Delivery Man Panel (Demo)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .card { border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 14px; max-width: 720px; }
+    input, select { padding: 7px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+    button { padding: 8px 12px; cursor: pointer; }
+    pre { background: #f6f6f6; padding: 10px; overflow:auto; }
+  </style>
+</head>
+<body>
+  <h2>Delivery Man Panel</h2>
+
+  <div class="card">
+    <h3>1) Enter Delivery Man ID</h3>
+    <input id="dm_id" placeholder="Delivery Man ID (seed: 1 or 2)" value="1">
+    <button onclick="load()">Load My Deliveries</button>
+  </div>
+
+  <div class="card">
+    <h3>2) Update Flags (optional)</h3>
+    <input id="d_id" placeholder="Delivery ID">
+    <label>delivered</label>
+    <select id="delivered">
+      <option value="0">0 (not delivered)</option>
+      <option value="1">1 (delivered)</option>
+    </select>
+    <label>schedule</label>
+    <select id="schedule">
+      <option value="0">0 (not scheduled)</option>
+      <option value="1" selected>1 (scheduled)</option>
+    </select>
+    <label>out_of_delivery</label>
+    <select id="out_of_delivery">
+      <option value="0" selected>0 (in delivery)</option>
+      <option value="1">1 (out of delivery)</option>
+    </select>
+    <button onclick="updateStatus()">Update Status</button>
+  </div>
+
+  <div class="card">
+    <h3>3) Confirm OTP (Unique Feature)</h3>
+    <input id="otp_did" placeholder="Delivery ID">
+    <input id="otp_code" placeholder="OTP code (from Admin page)">
+    <button onclick="confirmOtp()">Confirm OTP & Mark Delivered</button>
+  </div>
+
+  <pre id="out"></pre>
+
+<script>
+const api = (file) => "../backend/" + file;
+function show(obj){ document.getElementById("out").textContent = JSON.stringify(obj, null, 2); }
+
+async function load(){
+  const id = Number(dm_id.value);
+  const r = await fetch(api("dm_my_deliveries.php") + "?dm_id=" + encodeURIComponent(id));
+  const data = await r.json();
+  show(data);
+
+  // auto-fill first delivery for convenience
+  if(Array.isArray(data) && data.length){
+    d_id.value = data[0].d_id;
+    otp_did.value = data[0].d_id;
+  }
+}
+
+async function post(file, body){
+  const r = await fetch(api(file), {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify(body)
+  });
+  const data = await r.json().catch(()=>({message:"Invalid JSON"}));
+  if(!r.ok){ show({error:true, status:r.status, data}); return null; }
+  show(data); return data;
+}
+
+async function updateStatus(){
+  const body = {
+    dm_id: Number(dm_id.value),
+    d_id: Number(d_id.value),
+    delivered: Number(delivered.value),
+    schedule: Number(schedule.value),
+    out_of_delivery: Number(out_of_delivery.value)
+  };
+  await post("dm_update_status.php", body);
+}
+
+async function confirmOtp(){
+  const body = {
+    dm_id: Number(dm_id.value),
+    d_id: Number(otp_did.value),
+    otp_code: otp_code.value
+  };
+  await post("dm_confirm_otp.php", body);
+}
+</script>
+</body>
+</html>

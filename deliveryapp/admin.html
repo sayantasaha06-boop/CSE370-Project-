@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Admin Panel (Demo)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .card { border: 1px solid #ddd; padding: 12px; border-radius: 8px; margin-bottom: 14px; max-width: 720px; }
+    input { padding: 7px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+    button { padding: 8px 12px; cursor: pointer; }
+    pre { background: #f6f6f6; padding: 10px; overflow:auto; }
+  </style>
+</head>
+<body>
+  <h2>Admin Panel (Delivery + Delivery Man + Assignment)</h2>
+
+  <div class="card">
+    <h3>1) Admin Login</h3>
+    <input id="email" placeholder="email" value="admin@gmail.com">
+    <input id="password" placeholder="password" value="1234" type="password">
+    <button onclick="login()">Login</button>
+    <p><b>Logged in Admin ID:</b> <span id="aid">-</span></p>
+  </div>
+
+  <div class="card">
+    <h3>2) Add Delivery Man</h3>
+    <input id="dm_name" placeholder="Delivery man name (e.g., Hasan)">
+    <input id="dm_contact" placeholder="Contact no (e.g., 01700000003)">
+    <button onclick="addDM()">Add Delivery Man</button>
+  </div>
+
+  <div class="card">
+    <h3>3) Create Delivery (with OTP)</h3>
+    <input id="customer_id" placeholder="Customer ID (seed: 1 or 2)" value="1">
+    <input id="vehicle_no" placeholder="Vehicle no (e.g., DHA-1234)" value="DHA-1234">
+    <input id="delivery_time" placeholder="YYYY-MM-DD HH:MM:SS (optional)">
+    <button onclick="createDelivery()">Create Delivery</button>
+    <p><b>Created Delivery ID:</b> <span id="did">-</span></p>
+    <p><b>OTP (show in demo):</b> <span id="otp">-</span></p>
+  </div>
+
+  <div class="card">
+    <h3>4) Assign Delivery to Delivery Man</h3>
+    <input id="assign_did" placeholder="Delivery ID">
+    <input id="assign_dmid" placeholder="Delivery Man ID (seed: 1 or 2)">
+    <button onclick="assign()">Assign</button>
+  </div>
+
+  <div class="card">
+    <h3>5) Check Delivery Details</h3>
+    <input id="check_did" placeholder="Delivery ID">
+    <button onclick="checkDelivery()">Check</button>
+  </div>
+
+  <pre id="out"></pre>
+
+<script>
+const api = (file) => "../backend/" + file;
+
+function show(obj){ document.getElementById("out").textContent = JSON.stringify(obj, null, 2); }
+
+async function post(file, body){
+  const r = await fetch(api(file), {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body)
+  });
+  const data = await r.json().catch(()=>({message:"Invalid JSON"}));
+  if(!r.ok) { show({error:true, status:r.status, data}); return null; }
+  show(data); return data;
+}
+
+async function login(){
+  const data = await post("admin_login.php", {email: email.value, password: password.value});
+  if(data){ aid.textContent = data.A_id; }
+}
+
+async function addDM(){
+  const A_id = Number(aid.textContent);
+  if(!A_id) return show({message:"Login first"});
+  const data = await post("admin_add_deliveryman.php", {A_id, name: dm_name.value, contact_no: dm_contact.value});
+  return data;
+}
+
+async function createDelivery(){
+  const data = await post("delivery_create.php", {
+    customer_id: Number(customer_id.value),
+    vehicle_no: vehicle_no.value,
+    delivery_time: delivery_time.value
+  });
+  if(data){
+    did.textContent = data.d_id;
+    otp.textContent = data.otp_code;
+    assign_did.value = data.d_id;
+    check_did.value = data.d_id;
+  }
+}
+
+async function assign(){
+  const A_id = Number(aid.textContent);
+  if(!A_id) return show({message:"Login first"});
+  const data = await post("admin_assign_delivery.php", {
+    A_id,
+    d_id: Number(assign_did.value),
+    dm_id: Number(assign_dmid.value)
+  });
+  return data;
+}
+
+async function checkDelivery(){
+  const d_id = Number(check_did.value);
+  const r = await fetch(api("delivery_logs.php") + "?d_id=" + encodeURIComponent(d_id));
+  const data = await r.json();
+  show(data);
+}
+</script>
+</body>
+</html>
